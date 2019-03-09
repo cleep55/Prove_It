@@ -8,6 +8,8 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableString;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,8 +27,16 @@ public class MyTripsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_my_trips);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        ArrayList<Trip> trips = recordActivity.trips;
+        ArrayList<Trips> trips = recordActivity.trips;
 
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
        //trip1Button = (Button) findViewById(R.id.trip1);
 //        String testString = "TopLeft TopCenter TopRight BottomLeft BottomCenter BottomRight"
 //        Spannable spanString = new SpannableString(testString);
@@ -253,29 +263,25 @@ public class MyTripsActivity extends AppCompatActivity {
                 Intent summaryIntent = new Intent(this, SummaryActivity.class);
                 startActivity(summaryIntent);
                 return true;
-            /*case R.id.action_MyTrips:
+            case R.id.action_MyTrips:
                 // User chose the "Favorite" action, mark the current item
                 // as a favorite...
                 Intent myTripsIntent = new Intent(this, MyTripsActivity.class);
                 startActivity(myTripsIntent);
-                return true;*/
+                return true;
             case R.id.action_Standings:
                 // User chose the "Favorite" action, mark the current item
                 // as a favorite...
                 Intent standingsIntent = new Intent(this, StandingsActivity.class);
 
-//                Bundle myBundle = new Bundle();
-//                myBundle.putInt("x", 5);
-//                myBundle.putString("str", "hello");
-//                standingsIntent.putExtras(myBundle);
+                Bundle myBundle = new Bundle();
+                myBundle.putInt("x", 5);
+                myBundle.putString("str", "hello");
+                standingsIntent.putExtras(myBundle);
 
                 startActivity(standingsIntent);
                 return true;
-            case R.id.action_MyTripsMaps:
-                // User chose the "Settings" item, show the app settings UI...
-                Intent myTripsMapIntent = new Intent(this, MyTripsMapsActivity.class);
-                startActivity(myTripsMapIntent);
-                return true;
+
 
             default:
                 // If we got here, the user's action was not recognized.

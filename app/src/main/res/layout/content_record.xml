@@ -84,19 +84,20 @@
                 android:text="Longitude"/>
 
         </GridLayout>
-        <!-- android:paddingTop="20dp" -->
+
         <TextView
             android:id="@+id/accel_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
-            android:textSize="20dip"
+            android:paddingTop="20dp"
+            android:textSize="25dip"
             android:text="X: \nY: \nZ:"/>
-        <!-- android:paddingTop="20dp" -->
         <TextView
             android:id="@+id/score_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingTop="20dp"
             android:layout_alignParentTop="true"
             android:textSize="25dip"
             android:text="Score: 100"/>
@@ -123,7 +124,7 @@
             android:id="@+id/time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="15dip"
+            android:textSize="30dip"
             android:text="Recording Started at: \nRecording Ended at: "/>
         <Chronometer
             android:id="@+id/stopwatch"

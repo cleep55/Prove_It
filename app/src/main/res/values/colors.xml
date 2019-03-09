@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#FFD11A</color> <!-- Color.rgb(255,209,26) -->
-    <color name="colorPrimaryDark">#4A473C</color> <!-- Color.rgb(74,71,60) -->
-    <color name="colorAccent">#7D7D7D</color><!-- Color.rgb(125,125,125) -->
-    <color name="green">#00E500</color>
-    <color name="red">#D30000</color>
-    <color name="cyan">#00FFFF</color>
+    <color name="colorPrimary">#FFD11A</color>
+    <color name="colorPrimaryDark">#4A473C</color>
+    <color name="colorAccent">#7D7D7D</color>
 </resources>

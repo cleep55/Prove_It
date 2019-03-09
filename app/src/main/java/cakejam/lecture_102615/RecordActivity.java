@@ -20,7 +20,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CompoundButton;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ToggleButton;
 import android.widget.Chronometer;
 
@@ -35,19 +34,10 @@ import com.openxc.measurements.AcceleratorPedalPosition;
 import com.openxc.measurements.FuelConsumed;
 import com.openxc.measurements.Odometer;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
 public class RecordActivity extends AppCompatActivity {
-    /* -------------------------------------------------------------------------------------------
-       ------------------------------ Begin: DECLARATIONS some initializations --------------------------------
-       -------------------------------------------------------------------------------------------*/
-
-    String NAME_OF_FILE = "index.html";//DataHandler.DATA_BASE_NAME;
-
     // OpenXC Variables
     TextView mVehicleSpeedView, brakeTV, swTV, pedalPosTV, fuelConsumedTV, odometerTV, latitudeTV, longitudeTV;
     private static final String TAG = "MainActivity";
@@ -67,40 +57,10 @@ public class RecordActivity extends AppCompatActivity {
     //CamSenseListener camSL;//, camSL2;
     public Vibrator v;
 
-    //Scoring
     TextView scoreTV;
     ArrayList<Double> queue;
     public int tempColor;
     public double speedScore,brakeScore,cornerScore,totalScore, fuelScore;
-    ArrayList<Integer> timeArray = new ArrayList<>();
-    ArrayList<Integer> speedArray = new ArrayList<>();
-    ArrayList<Integer> brakeArray = new ArrayList<>();
-    ArrayList<Integer> cornerArray = new ArrayList<>();
-    ArrayList<Integer> fuelArray = new ArrayList<>();
-    ArrayList<Integer> overallArray = new ArrayList<>();
-    // timeArray, speedArray, brakeArray, cornerArray, fuelArray, overallArray;
-    //ArrayList<ArrayList<Double>> scoresArray = new ArrayList<>();
-    long normToMilli = 1000000;
-    int freqScoreCollection;// 1 minute (1,000 = 1 second)
-    int freqSpeedDeduction;
-    int freqCorneringDeduction;
-    int freqFuelDeduction = 250;
-    int freqPosScore;
-    int startScoreCollection;
-    //int posSpeedScoreTime=0, posBrakeScoreTime=0, posCornerScoreTime=0, posFuelScoreTime=0;
-    int prevScoreUpdateTime =0, speedDeductionTime=0,brakeDeductionTime=0,cornerDeductionTime=0,fuelDeductionTime=0;
-    int minuteCount = 0;
-    public String speedDeduction = "Harsh Acceleration";
-    public String brakeDeduction = "Harsh Brake";
-    public String cornerDeduction = "Harsh Corner";
-    public String fuelDeduction = "Inefficient Fuel";
-    double accelTHRESHOLD;// = 4;
-    double speedTHRESHOLD;// = 0.004;
-    double brakeTHRESHOLD;// = -0.004;
-    double swSharpTHRESHOLD;// = 30;
-    double speedSharpTHRESHOLD;// = 16;
-    double swSlightTHRESHOLD;// = 13;
-    double speedSlightTHRESHOLD;// = 30;
 
     //Toggle Values
     ToggleButton toggle;
@@ -117,20 +77,14 @@ public class RecordActivity extends AppCompatActivity {
     ArrayList<Double> longPoints = new ArrayList<Double>();
     ArrayList<Integer> timePoints = new ArrayList<Integer>();
     ArrayList<String> deductionPoint = new ArrayList<String>();
-    public static ArrayList<Trip> trips = new ArrayList<Trip>();
+    public static ArrayList<Trips> trips = new ArrayList<Trips>();
     int numOfTrip;
     TextView recapTV;
-    int startTime, endTime, tripTimeSecs;
+    long startTime, endTime, tripTimeSecs;
 
-    //Stopwatch
     TextView timeView;
     public Chronometer myChrono;
     String startTimeFormatted;
-
-    /* -------------------------------------------------------------------------------------------
-       ------------------------------ End: DECLARATIONS some initializations --------------------------------
-       -------------------------------------------------------------------------------------------*/
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,20 +92,8 @@ public class RecordActivity extends AppCompatActivity {
         setContentView(R.layout.activity_record);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        final StandingsActivity standingsActivity = new StandingsActivity();
-
-/* --------------------------------------------------------------------------------------------------------------------------------------
-   ------------------------------ Begin: INITIALIZATION ---------------------------------------------------------------------------------
-   --------------------------------------------------------------------------------------------------------------------------------------*/
-
-        // TextViews Initialization and setup
-        startTimeString = "has not started";
-        endTimeString = "has not ended";
-        timeView = (TextView) findViewById(R.id.time);
-        scoreTV = (TextView) findViewById(R.id.score_info);
-        toggle = (ToggleButton) findViewById(R.id.record_toggle);
-        myChrono = (Chronometer) findViewById(R.id.stopwatch);
-        //timeArray.add(0.0); speedArray.add(0.0); brakeArray.add(0.0); cornerArray.add(0.0); fuelArray.add(0.0); overallArray.add(0.0);
+        totalScore = 100;
+        currTime=prevTime =speedCurrTime=speedPrevTime=swCurrTime=swPrevTime=pedalPrevTime=pedalCurrTime= 0;
 
         //OpenXC Initialization
         mVehicleSpeedView = (TextView) findViewById(R.id.vehicle_speed);
@@ -165,116 +107,44 @@ public class RecordActivity extends AppCompatActivity {
 
         recapTV = (TextView) findViewById(R.id.recap);
 
-        // Acceleration Scoring Eval. Initialization
+
         speedVal = 0;
         speedPrevVal = 0;
         swAngleVal = 0;
         brakeVal = "off";
-        totalScore = 100;
-        currTime=prevTime =speedCurrTime=speedPrevTime=swCurrTime=swPrevTime=pedalPrevTime=pedalCurrTime= 0;
+
         currAccel = 0;
         speedDiff =0;
         timeDiff = 0;
-
-//        accelTHRESHOLD = standingsActivity.getAccelTHRESH();
-//        brakeTHRESHOLD = standingsActivity.getBrakeTHRESH();
-//        speedTHRESHOLD = standingsActivity.getSpeedTHRESH();
-//        swSharpTHRESHOLD = standingsActivity.getSwSharpTHRESH();
-//        speedSharpTHRESHOLD = standingsActivity.getSpeedSharpTHRESH();
-//        swSlightTHRESHOLD = standingsActivity.getSwSlightTHRESH();
-//        speedSharpTHRESHOLD = standingsActivity.getSpeedSlightTHRESH();
-
-
-        Intent intent = this.getIntent();
-        Bundle bundle = intent.getExtras();
-//        boolean empty = bundle.isEmpty();
-//        double blah = bundle.getDouble("Accel Thresh");
-        if(bundle == null)
-        {
-            accelTHRESHOLD=4; speedTHRESHOLD=.004; brakeTHRESHOLD=-.004;
-            swSharpTHRESHOLD=30; speedSharpTHRESHOLD = 17;
-            swSlightTHRESHOLD=15; speedSlightTHRESHOLD=30;
-            freqScoreCollection = 5000;// 1 minute (1,000 = 1 second)
-            freqSpeedDeduction = 250;
-            freqCorneringDeduction = 500;
-            freqPosScore = 10000;
-            startScoreCollection = 10000;
-        }
-        else{
-            accelTHRESHOLD = bundle.getDouble("Accel Thresh");
-            brakeTHRESHOLD = bundle.getDouble("Brake Thresh");
-            speedTHRESHOLD = bundle.getDouble("Speed Thresh");
-            swSharpTHRESHOLD = bundle.getDouble("SW Sharp Thresh");
-            speedSharpTHRESHOLD = bundle.getDouble("Speed Sharp Thresh");
-            swSlightTHRESHOLD = bundle.getDouble("SW Slight Thresh");
-            speedSlightTHRESHOLD = bundle.getDouble("Speed Slight Thresh");
-            startScoreCollection = bundle.getInt("Start Score Collection");
-            freqScoreCollection = bundle.getInt("Score Collection Freq");
-            freqPosScore = bundle.getInt("Positive Score Freq");
-            freqSpeedDeduction = bundle.getInt("Speed Deduct Freq");
-            freqCorneringDeduction = bundle.getInt("Corner Deduct Freq");
-
-        }
-
-
         queue = new ArrayList<>(10);
         while(queue.size() < 10) queue.add(0.0);
 
+        startTimeString = "has not started";
+        endTimeString = "has not ended";
+        timeView = (TextView) findViewById(R.id.time);
+        scoreTV = (TextView) findViewById(R.id.score_info);
+        toggle = (ToggleButton) findViewById(R.id.record_toggle);
+        myChrono = (Chronometer) findViewById(R.id.stopwatch);
+
         v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
 
-        // DATABASE setting up Trip Class
-        final DataHandler handler =  new DataHandler(getBaseContext());
-        //handler.deleteTable();
-        trips = handler.getAllTrips();
-        if(trips.size()==0){
-            numOfTrip =1;
-        }
-        else {
-            numOfTrip = trips.get(trips.size() - 1).getTripNum();
-        }
 
-        // Clear memory
-        //numOfTrip = 1;
-        //handler.deleteTable();
-
-/* -----------------------------------------------------------------------------------------------------------------------------------------
-   ------------------------------ End: INITIALIZATION ----------------------------------------------------------------------------------------
-   -----------------------------------------------------------------------------------------------------------------------------------------*/
-
-/* ######################################################################################################################################
-   ########################### Toggle Enabled RECORD ####################################################################################
-   ######################################################################################################################################*/
         toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     // The toggle is enabled
-//                    boolean toggleCheck = toggle.isChecked();
-
-
-//                    accelTHRESHOLD = standingsActivity.getAccelTHRESH();
-//                    speedTHRESHOLD = standingsActivity.getSpeedTHRESH();
-//                    brakeTHRESHOLD = standingsActivity.getBrakeTHRESH();
-//                    speedSharpTHRESHOLD = standingsActivity.getSpeedSharpTHRESH();
-//                    swSharpTHRESHOLD = standingsActivity.getSwSharpTHRESH();
-//                    speedSlightTHRESHOLD = standingsActivity.getSpeedSlightTHRESH();
-//                    swSlightTHRESHOLD = standingsActivity.getSwSlightTHRESH();
-
                     toggleStatus = true;
                     speedScore = 100;
                     brakeScore = 100;
                     cornerScore = 100;
                     fuelScore = 100;
-                    latPoints = new ArrayList<Double>();
-                    longPoints = new ArrayList<Double>();
-                    timePoints = new ArrayList<Integer>();
-                    deductionPoint = new ArrayList<String>();
                     odomStart = odometer;
                     scoreTV.setText("Speed: " + speedScore +
                             "\nBrake: " + brakeScore +
                             "\nCorner: " + cornerScore);
                     myChrono.setBase(SystemClock.elapsedRealtime());
                     myChrono.start();
-                    startTime = (int) (System.nanoTime()/normToMilli);
+                    startTime = System.currentTimeMillis();
 
                     //.Timestamp startTemp = new Timestamp(startTime);
                     //startTemp.setTime(System.currentTimeMillis());
@@ -289,7 +159,7 @@ public class RecordActivity extends AppCompatActivity {
                     //startTimeString = startTemp.toString();
                     timeView.setText("Recording Started at: " + /*startTimeString resultDate*/ startTimeFormatted + "\nRecording Ended at: " + endTimeString);
 
-                    prevTime = speedPrevTime=swPrevTime=pedalPrevTime = (int) (System.nanoTime()/normToMilli);
+                    prevTime = (int) (System.currentTimeMillis());
                     sm = (SensorManager) getSystemService(SENSOR_SERVICE);
                     accelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
                     accelTV = (TextView) findViewById(R.id.accel_info);
@@ -311,10 +181,14 @@ public class RecordActivity extends AppCompatActivity {
                     } else {
                         // fai! we dont have an accelerometer!
                     }
+                     /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                     * /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                     * /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                     * /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                     * /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                     * /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/* ######################################################################################################################################
-   ########################### Toggle DISABLED STOP RECORDING ###########################################################################
-   ######################################################################################################################################*/
+
                 } else {
                     // The toggle is disabled
                     toggleStatus = false;
@@ -323,32 +197,21 @@ public class RecordActivity extends AppCompatActivity {
                     myChrono.stop();
                     myChrono.getBase();
                     odomEnd = odometer;
-                    endTime = (int) (System.nanoTime()/normToMilli);
+                    endTime = System.currentTimeMillis();
                     tripTimeSecs = (endTime-startTime)/1000;
                     String endTimeFormatted = DateFormat.getDateTimeInstance().format(endTime);
                     sm.unregisterListener(camSL2);
                     //camSL2 = null;
 
                     fuelEfficiency = (odomEnd - odomStart) / (0.264172059*fuelConsumed);
-                    fuelScore = 100;// * fuelEfficiency / 30;
+                    fuelScore = 100 * fuelEfficiency / 30;
 
-                    Trip tripRecorded = new Trip(numOfTrip, startTimeFormatted, endTimeFormatted, myChrono.getText().toString(), tripTimeSecs,
-                            speedScore, brakeScore, cornerScore, totalScore,
-                            timePoints, latPoints, longPoints, deductionPoint);
-                    Trip tripRecorded2 = new Trip(numOfTrip, startTimeFormatted, endTimeFormatted, myChrono.getText().toString(), tripTimeSecs,
-                            speedScore, brakeScore, cornerScore, fuelScore, totalScore,
-                            timeArray, speedArray, brakeArray,
-                            cornerArray,fuelArray, overallArray,
-                            timePoints, latPoints, longPoints, deductionPoint);
-                    if(tripTimeSecs>freqScoreCollection/1000) {
-                        //trips.add(tripRecorded);
-                        trips.add(tripRecorded2);
-                        //Saves Data to Database
-                        handler.insertData(tripRecorded2);
-                        uploadFile();
-                    }
-                    else{Toast.makeText(getBaseContext(),"Trip was too short to record", Toast.LENGTH_LONG).show();}
-                        recapTV.setText(String.format("Trip Score:  %.2f", totalScore)
+                    Trips tripRecorded = new Trips(numOfTrip, startTimeFormatted, endTimeFormatted, speedScore,
+                            brakeScore, cornerScore, totalScore, myChrono.getText().toString(), timePoints,
+                            latPoints, longPoints, deductionPoint, tripTimeSecs);
+                    trips.add(tripRecorded);
+                    int sizer = trips.size();
+                    recapTV.setText(String.format("Trip Score:  %.2f", totalScore)
                                     +String.format("\nDistance Traveled: %.2f", (odomEnd-odomStart))
                                     +String.format("\nFuel Efficiency: %.2f", fuelEfficiency)
                             //+String.format("\nFuel Score: %.2f", fuelScore)
@@ -379,89 +242,6 @@ public class RecordActivity extends AppCompatActivity {
 
 
     }
-    public void posScoreUpdate(int prevDeductionTime, String deductionType) {
-        int updateTime = (int) (System.nanoTime() / normToMilli);
-        boolean toggleCheck = toggle.isChecked();
-        if ((updateTime - prevDeductionTime) > freqPosScore && toggleStatus) {
-            if(deductionType == speedDeduction) {
-                if(speedScore <100) {
-                    speedScore++;
-                    scoreTV.setBackgroundColor(Color.GREEN);
-                    scoreTV.setText("Speed: " + speedScore +
-                            "\nBrake: " + brakeScore +
-                            "\nCorner: " + cornerScore);
-                }
-                speedDeductionTime = updateTime;
-            }
-            else if(deductionType == brakeDeduction) {
-                if(brakeScore<100) {
-                    brakeScore++;
-                    scoreTV.setBackgroundColor(Color.GREEN);
-                    scoreTV.setText("Speed: " + speedScore +
-                            "\nBrake: " + brakeScore +
-                            "\nCorner: " + cornerScore);
-                }
-                brakeDeductionTime = updateTime;
-            }
-            else if(deductionType == cornerDeduction) {
-                if(cornerScore<100) {
-                    cornerScore++;
-                    scoreTV.setBackgroundColor(Color.GREEN);
-                    scoreTV.setText("Speed: " + speedScore +
-                            "\nBrake: " + brakeScore +
-                            "\nCorner: " + cornerScore);
-                }
-                cornerDeductionTime = updateTime;
-            }
-            else{
-                if(fuelScore<100) {
-                    fuelScore++;
-                    scoreTV.setBackgroundColor(Color.GREEN);
-                    scoreTV.setText("Speed: " + speedScore +
-                            "\nBrake: " + brakeScore +
-                            "\nCorner: " + cornerScore);
-                }
-                fuelDeductionTime = updateTime;
-            }
-
-        }
-    }
-
-    public void minuteScoresUpdate(){
-//        long updateTimeNano =  System.nanoTime();
-//        long toMillis = updateTimeNano/normToMilli;
-//        int updateTime = (int) toMillis;
-        int updateTime = (int) (System.nanoTime()/normToMilli);
-        int startTimeInt = (int) startTime;
-        if(updateTime-prevScoreUpdateTime>freqScoreCollection && toggle.isChecked() && (updateTime-startTimeInt)>startScoreCollection)
-        {
-            if(minuteCount==0){
-                timeArray.add(minuteCount+1);
-                speedArray.add(100);
-                brakeArray.add(100);
-                cornerArray.add(100);
-                fuelArray.add(100);
-                //double overallScore = (speedScore+brakeScore+cornerScore+fuelScore)/4;
-                overallArray.add(100);
-                prevScoreUpdateTime = updateTime;
-                minuteCount = 1;
-            }
-            else{
-                timeArray.add(minuteCount+1);
-                speedArray.add((int) speedScore);
-                brakeArray.add((int) brakeScore);
-                cornerArray.add((int) cornerScore);
-                fuelArray.add((int) fuelScore);
-                double overallScore = (speedScore+brakeScore+cornerScore+fuelScore)/4;
-                overallArray.add((int) overallScore);
-                prevScoreUpdateTime = updateTime;
-            }
-
-        }
-
-    }
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -470,26 +250,22 @@ public class RecordActivity extends AppCompatActivity {
         return true;
     }
 
-/* LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-    LLLLLLLLLLLLLLLLLLLLLLLLLLLLLL accelerometer listener LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-    LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL*/
     SensorEventListener camSL2 = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event) {
-            currTime = (int) (System.nanoTime()/normToMilli);
-
+            currTime =  (int) (System.currentTimeMillis());
             accelXDouble = (double) event.values[0];
             accelYDouble = (double) event.values[1];
             accelZDouble = (double) event.values[2];
             accelMag = Math.sqrt(Math.pow(accelXDouble, 2) + Math.pow(accelYDouble, 2) + Math.pow(accelZDouble, 2));
             //speedVal2 = recordActivity.speedVal;
 
-                accelTV.setText("X: " +String.format("%.2f",accelXDouble) +
-                        "\nY: " + String.format("%.2f",accelYDouble) +
-                        "\nZ: " + String.format("%.2f",accelZDouble) +
-                        "\nAccel Magnitude:  " + String.format("%.2f",accelMag));
+                accelTV.setText("X: " +accelXDouble +
+                        "\nY: " + accelYDouble +
+                        "\nZ: " + accelZDouble +
+                        "\nAccel Magnitude:  " + accelMag);
 
-            if (Math.abs(accelMag - prevaccelMag) > accelTHRESHOLD  && toggle.isChecked()) {
+            if (Math.abs(accelMag - prevaccelMag) > 4) {
                 if(currTime-prevTime>500) {
 
                     accelTV.setBackgroundColor(tempColor);
@@ -497,41 +273,39 @@ public class RecordActivity extends AppCompatActivity {
                     if (Math.abs(swAngleVal) > 10) {
                         cornerScore = cornerScore-5;
                         scoreTV.setText("Speed: " + speedScore +
-                                "\nBrake: " + brakeScore +
-                                "\nCorner: " + cornerScore);
+                                    "\nBrake: " + brakeScore +
+                                    "\nCorner: " + cornerScore);
 
                         Log.v(TAG, "" + Math.abs(swAngleVal));
                         latPoints.add(latitude);
                         longPoints.add(longitude);
                         timePoints.add(currTime);
-                        deductionPoint.add(cornerDeduction);
-                        cornerDeductionTime = currTime;
+                        deductionPoint.add("Harsh Corner");
                     }
                     else {
                         if (brakeVal.equals("off")) {
                             speedScore = speedScore -5;
-                            scoreTV.setText("Speed: " + speedScore +
-                                    "\nBrake: " + brakeScore +
-                                    "\nCorner: " + cornerScore);
+
+                                scoreTV.setText("Speed: " + speedScore +
+                                        "\nBrake: " + brakeScore +
+                                        "\nCorner: " + cornerScore);
 
                             latPoints.add(latitude);
                             longPoints.add(longitude);
                             timePoints.add(currTime);
-                            deductionPoint.add(speedDeduction);
-                            speedDeductionTime = currTime;
+                            deductionPoint.add("Harsh Acceleration");
                         }
                         else {
                             brakeScore= brakeScore -5;
 
-                            scoreTV.setText("Speed: " + speedScore +
-                                    "\nBrake: " + brakeScore +
-                                    "\nCorner: " + cornerScore);
+                                scoreTV.setText("Speed: " + speedScore +
+                                        "\nBrake: " + brakeScore +
+                                        "\nCorner: " + cornerScore);
 
                             latPoints.add(latitude);
                             longPoints.add(longitude);
                             timePoints.add(currTime);
-                            deductionPoint.add(brakeDeduction);
-                            brakeDeductionTime = currTime;
+                            deductionPoint.add("Harsh Brake");
                         }
 
                     }
@@ -551,10 +325,7 @@ public class RecordActivity extends AppCompatActivity {
 
     };
 
-/* LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-   LLLLLLLLLLLLLLLLLLLLLLLLL vehicle listeners LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-   LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL*/
-
+    ///////////////////////////9999999999999999999999999999999999999999999999999
 
     VehicleSpeed.Listener mSpeedListener = new VehicleSpeed.Listener() {
         public void receive(Measurement measurement) {
@@ -572,78 +343,66 @@ public class RecordActivity extends AppCompatActivity {
                     // Finally, we've got a new value and we're running on the
                     // UI thread - we set the text of the VehicleSpeed view to
                     // the latest value
-                    speedCurrTime = (int) (System.nanoTime()/normToMilli);
+                    speedCurrTime =  (int) (System.currentTimeMillis());
                     speedVal = 0.621371 *speed.getValue().doubleValue();
-                    mVehicleSpeedView.setText(String.format("Speed: %.2f", speedVal));//+"\n"+currAccel);
-                    minuteScoresUpdate();
-                    posScoreUpdate(speedDeductionTime, speedDeduction);
-                    posScoreUpdate(brakeDeductionTime, brakeDeduction);
-                    posScoreUpdate(cornerDeductionTime, cornerDeduction);
-                    posScoreUpdate(fuelDeductionTime, fuelDeduction);
-
-
-                    if((speedCurrTime-speedPrevTime)>freqSpeedDeduction && toggle.isChecked()) {
-
+                    mVehicleSpeedView.setText( String.format("Speed: %.2f", speedVal));//+"\n"+currAccel);
+                    if(speedCurrTime-speedPrevTime>250) {
                         speedDiff= speedVal - speedPrevVal;
                         timeDiff =  speedCurrTime - speedPrevTime;
                         currAccel = speedDiff/timeDiff;
-                        //mVehicleSpeedView.setText( String.format("Speed: %.2f", speedVal));//+"\n"+currAccel);
-//                        double sumElements=0, accelAvg, idx0, idx1, idx2, idx3, idx4;
-//                        boolean goodAvg = true;
-//
-//                        idx0 = queue.get(0);
-//                        idx1 = queue.get(1);
-//                        idx2 = queue.get(2);
-//                        idx3 = queue.get(3);
-//                        queue.set(1,idx0);
-//                        queue.set(2,idx1);
-//                        queue.set(3,idx2);
-//                        queue.set(4,idx3);
-//
-//
-//                        queue.set(0,currAccel);
-//                        for(int i = 0; i < queue.size(); i++){
-//                            if(queue.get(i) == 0.0){
-//                                goodAvg = false;
-//                            }
-//                            sumElements += queue.get(i);
-//                        }
-//                        accelAvg = sumElements/queue.size();
+                        mVehicleSpeedView.setText( String.format("Speed: %.2f", speedVal));//+"\n"+currAccel);
+                        double sumElements=0, accelAvg, idx0, idx1, idx2, idx3, idx4;
+                        boolean goodAvg = true;
 
-                        if(/*accelAvg*/currAccel > speedTHRESHOLD){
+                        idx0 = queue.get(0);
+                        idx1 = queue.get(1);
+                        idx2 = queue.get(2);
+                        idx3 = queue.get(3);
+                        queue.set(1,idx0);
+                        queue.set(2,idx1);
+                        queue.set(3,idx2);
+                        queue.set(4,idx3);
+
+
+                        queue.set(0,currAccel);
+                        for(int i = 0; i < queue.size(); i++){
+                            if(queue.get(i) == 0.0){
+                                goodAvg = false;
+                            }
+                            sumElements += queue.get(i);
+                        }
+                        accelAvg = sumElements/queue.size();
+
+                        if(/*accelAvg*/currAccel > 0.0025){
                             scoreTV.setBackgroundColor(tempColor);
                             speedScore--;
                             scoreTV.setText("Speed: " + speedScore +
-                                    "\nBrake: " + brakeScore +
-                                    "\nCorner: " + cornerScore);
+                                        "\nBrake: " + brakeScore +
+                                        "\nCorner: " + cornerScore);
 
                             latPoints.add(latitude);
                             longPoints.add(longitude);
-                            timePoints.add(speedCurrTime);
-                            deductionPoint.add(speedDeduction);
-                            speedPrevTime = speedCurrTime;
-                            speedDeductionTime = speedCurrTime;
-                            speedPrevVal = speedVal;
+                            timePoints.add(currTime);
+                            deductionPoint.add("Harsh Acceleration");
+
                         }
                         else{scoreTV.setBackgroundColor(Color.WHITE);}
-                        if(/*accelAvg*/currAccel < brakeTHRESHOLD){
+                        if(/*accelAvg*/currAccel < -0.0025){
                             scoreTV.setBackgroundColor(tempColor);
                             brakeScore--;
 
-                            scoreTV.setText("Speed: " + speedScore +
-                                    "\nBrake: " + brakeScore +
-                                    "\nCorner: " + cornerScore);
+                                scoreTV.setText("Speed: " + speedScore +
+                                        "\nBrake: " + brakeScore +
+                                        "\nCorner: " + cornerScore);
 
                             latPoints.add(latitude);
                             longPoints.add(longitude);
-                            timePoints.add(speedCurrTime);
-                            deductionPoint.add(brakeDeduction);
-                            brakeDeductionTime = speedCurrTime;
-                            speedPrevTime = speedCurrTime;
-                            speedPrevVal = speedVal;
+                            timePoints.add(currTime);
+                            deductionPoint.add("Harsh Brake");
                         }
                         else{scoreTV.setBackgroundColor(Color.WHITE);}
-
+                        speedPrevTime = speedCurrTime;
+                        speedPrevVal = speedVal;
                     }
                 }
             });
@@ -652,10 +411,19 @@ public class RecordActivity extends AppCompatActivity {
 
     BrakePedalStatus.Listener mBrakeListener = new BrakePedalStatus.Listener() {
         public void receive(Measurement measurement) {
+            // When we receive a new VehicleSpeed value from the car, we want to
+            // update the UI to display the new value. First we cast the generic
+            // Measurement back to the type we know it to be, an VehicleSpeed.
             final BrakePedalStatus brake = (BrakePedalStatus) measurement;
+            // In order to modify the UI, we have to make sure the code is
+            // running on the "UI thread" - Google around for this, it's an
+            // important concept in Android.
 
             RecordActivity.this.runOnUiThread(new Runnable() {
                 public void run() {
+                    // Finally, we've got a new value and we're running on the
+                    // UI thread - we set the text of the VehicleSpeed view to
+                    // the latest value
                     brakeVal = brake.getValue().toString();
                     brakeTV.setText("Brake: "+brakeVal);
 
@@ -666,16 +434,26 @@ public class RecordActivity extends AppCompatActivity {
 
     SteeringWheelAngle.Listener mSWListener = new SteeringWheelAngle.Listener() {
         public void receive(Measurement measurement) {
+            // When we receive a new VehicleSpeed value from the car, we want to
+            // update the UI to display the new value. First we cast the generic
+            // Measurement back to the type we know it to be, an VehicleSpeed.
             final SteeringWheelAngle swAngle= (SteeringWheelAngle) measurement;
+            // In order to modify the UI, we have to make sure the code is
+            // running on the "UI thread" - Google around for this, it's an
+            // important concept in Android.
+
             RecordActivity.this.runOnUiThread(new Runnable() {
                 public void run() {
-                    swCurrTime = (int) (System.nanoTime()/normToMilli);
+                    // Finally, we've got a new value and we're running on the
+                    // UI thread - we set the text of the VehicleSpeed view to
+                    // the latest value
+                    swCurrTime = (int) (System.currentTimeMillis());
                     swAngleVal = swAngle.getValue().doubleValue();
                     swTV.setText(String.format("SW angle: %.2f", swAngleVal));
-                    if (swCurrTime - swPrevTime  > freqCorneringDeduction  && toggle.isChecked()) {
+                    if (swCurrTime - swPrevTime  > 500) {
 
 
-                        if (Math.abs(swAngleVal) > swSharpTHRESHOLD && speedVal > speedSharpTHRESHOLD) {
+                        if (Math.abs(swAngleVal) > 10 && speedVal > 17) {
                             cornerScore--;
                             scoreTV.setText("Speed: " + speedScore +
                                     "\nBrake: " + brakeScore +
@@ -683,14 +461,11 @@ public class RecordActivity extends AppCompatActivity {
                             Log.v(TAG, "" + Math.abs(swAngleVal));
                             latPoints.add(latitude);
                             longPoints.add(longitude);
-                            timePoints.add(swCurrTime);
-                            deductionPoint.add(cornerDeduction);
-                            swPrevTime = swCurrTime;
-                            cornerDeductionTime = swCurrTime;
+                            timePoints.add(currTime);
+                            deductionPoint.add("Harsh Corner");
 
                         }
-
-                        if (Math.abs(swAngleVal) > swSlightTHRESHOLD && speedVal > speedSlightTHRESHOLD) {
+                        if (Math.abs(swAngleVal) > 15 && speedVal > 30) {
                             cornerScore--;
                             scoreTV.setText("Speed: " + speedScore +
                                     "\nBrake: " + brakeScore +
@@ -698,12 +473,10 @@ public class RecordActivity extends AppCompatActivity {
                             Log.v(TAG, "" + Math.abs(swAngleVal));
                             latPoints.add(latitude);
                             longPoints.add(longitude);
-                            timePoints.add(swCurrTime);
-                            deductionPoint.add(cornerDeduction);
-                            swPrevTime = swCurrTime;
-                            cornerDeductionTime = swPrevTime;
+                            timePoints.add(currTime);
+                            deductionPoint.add("Harsh Corner");
                         }
-
+                        swPrevTime = swCurrTime;
 
                     }
                 }
@@ -713,10 +486,20 @@ public class RecordActivity extends AppCompatActivity {
 
     Latitude.Listener mLatListener = new Latitude.Listener() {
         public void receive(Measurement measurement) {
+            // When we receive a new VehicleSpeed value from the car, we want to
+            // update the UI to display the new value. First we cast the generic
+            // Measurement back to the type we know it to be, an VehicleSpeed.
             final Latitude lat= (Latitude) measurement;
+            // In order to modify the UI, we have to make sure the code is
+            // running on the "UI thread" - Google around for this, it's an
+            // important concept in Android.
 
             RecordActivity.this.runOnUiThread(new Runnable() {
                 public void run() {
+                    // Finally, we've got a new value and we're running on the
+                    // UI thread - we set the text of the VehicleSpeed view to
+                    // the latest value
+                    //swAngleVal = swAngle.getValue().doubleValue();
                     latitude = lat.getValue().doubleValue();
                     latitudeTV.setText( String.format("Latitude: %.4f", latitude));
                 }
@@ -726,13 +509,24 @@ public class RecordActivity extends AppCompatActivity {
 
     Longitude.Listener mLongListener = new Longitude.Listener() {
         public void receive(Measurement measurement) {
+            // When we receive a new VehicleSpeed value from the car, we want to
+            // update the UI to display the new value. First we cast the generic
+            // Measurement back to the type we know it to be, an VehicleSpeed.
             final Longitude lng= (Longitude) measurement;
+            // In order to modify the UI, we have to make sure the code is
+            // running on the "UI thread" - Google around for this, it's an
+            // important concept in Android.
 
             RecordActivity.this.runOnUiThread(new Runnable() {
                 public void run() {
+                    // Finally, we've got a new value and we're running on the
+                    // UI thread - we set the text of the VehicleSpeed view to
+                    // the latest value
+                    //swAngleVal = swAngle.getValue().doubleValue();
                     longitude = lng.getValue().doubleValue();
                     longitudeTV.setText(String.format("Longitude: %.4f", longitude));
-
+//                    swTV.setText("Steering Wheel angle: "
+//                            + swAngleVal +"\n"+ lng.getValue());
                 }
             });
         }
@@ -740,12 +534,21 @@ public class RecordActivity extends AppCompatActivity {
 
     AcceleratorPedalPosition.Listener mAcceleratorPedalPosition = new AcceleratorPedalPosition.Listener() {
         public void receive(Measurement measurement) {
-
+            // When we receive a new VehicleSpeed value from the car, we want to
+            // update the UI to display the new value. First we cast the generic
+            // Measurement back to the type we know it to be, an VehicleSpeed.
             final AcceleratorPedalPosition aPP= (AcceleratorPedalPosition) measurement;
+            // In order to modify the UI, we have to make sure the code is
+            // running on the "UI thread" - Google around for this, it's an
+            // important concept in Android.
 
             RecordActivity.this.runOnUiThread(new Runnable() {
                 public void run() {
-
+                    // Finally, we've got a new value and we're running on the
+                    // UI thread - we set the text of the VehicleSpeed view to
+                    // the latest value
+                    //swAngleVal = swAngle.getValue().doubleValue();
+                    //pedalCurrTime =  (int) (System.currentTimeMillis());
                     acceleratorPedalPosition = aPP.getValue().doubleValue();
                     pedalPosTV.setText( String.format("Pedal Pos: %.2f", acceleratorPedalPosition));
 //                    if(pedalCurrTime-speedPrevTime>250) {
@@ -772,14 +575,24 @@ public class RecordActivity extends AppCompatActivity {
 
     FuelConsumed.Listener mFuelConsumed = new FuelConsumed.Listener() {
         public void receive(Measurement measurement) {
+            // When we receive a new VehicleSpeed value from the car, we want to
+            // update the UI to display the new value. First we cast the generic
+            // Measurement back to the type we know it to be, an VehicleSpeed.
             final FuelConsumed fc= (FuelConsumed) measurement;
+            // In order to modify the UI, we have to make sure the code is
+            // running on the "UI thread" - Google around for this, it's an
+            // important concept in Android.
 
             RecordActivity.this.runOnUiThread(new Runnable() {
                 public void run() {
-
+                    // Finally, we've got a new value and we're running on the
+                    // UI thread - we set the text of the VehicleSpeed view to
+                    // the latest value
+                    //swAngleVal = swAngle.getValue().doubleValue();
                     fuelConsumed = fc.getValue().doubleValue();
                     fuelConsumedTV.setText( String.format("Fuel Consumed: %.2f", fuelConsumed));
-
+//                    swTV.setText("Steering Wheel angle: "
+//                            + swAngleVal +"\n"+ lng.getValue());
                 }
             });
         }
@@ -787,14 +600,24 @@ public class RecordActivity extends AppCompatActivity {
 
     Odometer.Listener mOdometer = new Odometer.Listener() {
         public void receive(Measurement measurement) {
-
+            // When we receive a new VehicleSpeed value from the car, we want to
+            // update the UI to display the new value. First we cast the generic
+            // Measurement back to the type we know it to be, an VehicleSpeed.
             final Odometer od= (Odometer) measurement;
+            // In order to modify the UI, we have to make sure the code is
+            // running on the "UI thread" - Google around for this, it's an
+            // important concept in Android.
 
             RecordActivity.this.runOnUiThread(new Runnable() {
                 public void run() {
+                    // Finally, we've got a new value and we're running on the
+                    // UI thread - we set the text of the VehicleSpeed view to
+                    // the latest value
+                    //swAngleVal = swAngle.getValue().doubleValue();
                     odometer = od.getValue().doubleValue();
                     odometerTV.setText( String.format("Odometer: %.2f", odometer));
-
+//                    swTV.setText("Steering Wheel angle: "
+//                            + swAngleVal +"\n"+ lng.getValue());
                 }
             });
         }
@@ -855,33 +678,28 @@ public class RecordActivity extends AppCompatActivity {
             case R.id.action_Summary:
                 // User chose the "Favorite" action, mark the current item
                 // as a favorite...
-                //toggle.setChecked(false);
+                toggle.setChecked(false);
                 Intent summaryIntent = new Intent(this, SummaryActivity.class);
                 startActivity(summaryIntent);
                 return true;
-            /*case R.id.action_MyTrips:
+            case R.id.action_MyTrips:
                 // User chose the "Favorite" action, mark the current item
                 // as a favorite...
                 Intent myTripsIntent = new Intent(this, MyTripsActivity.class);
                 startActivity(myTripsIntent);
-                return true;*/
+                return true;
             case R.id.action_Standings:
                 // User chose the "Favorite" action, mark the current item
                 // as a favorite...
                 toggle.setChecked(false);
                 Intent standingsIntent = new Intent(this, StandingsActivity.class);
 
-//                Bundle myBundle = new Bundle();
-//                myBundle.putInt("x", 5);
-//                myBundle.putString("str", "hello");
-//                standingsIntent.putExtras(myBundle);
+                Bundle myBundle = new Bundle();
+                myBundle.putInt("x", 5);
+                myBundle.putString("str", "hello");
+                standingsIntent.putExtras(myBundle);
 
                 startActivity(standingsIntent);
-                return true;
-            case R.id.action_MyTripsMaps:
-                // User chose the "Settings" item, show the app settings UI...
-                Intent myTripsMapIntent = new Intent(this, MyTripsMapsActivity.class);
-                startActivity(myTripsMapIntent);
                 return true;
 
             default:
@@ -901,17 +719,6 @@ public class RecordActivity extends AppCompatActivity {
 
     public String getBrakeVal(){
         return brakeVal;
-    }
-
-    public void uploadFile(){
-        try {
-            FileInputStream fis =this.openFileInput(NAME_OF_FILE);
-            HttpFileUploader htfu = new HttpFileUploader("ece535-mysql.its.umd.umich.edu/~wcleeper/ServerFileUpload.php","noparamshere", NAME_OF_FILE);
-            htfu.doStart(fis);
-        } catch (FileNotFoundException e) {
-// TODO Auto-generated catch block
-            e.printStackTrace();
-        }
     }
 
 

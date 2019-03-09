@@ -1,22 +1,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
-    <item android:id="@+id/action_Record"
-        android:title="@string/string_Record"
-        android:orderInCategory="100"
-        app:showAsAction="always" />
-    <item android:id="@+id/action_Summary"
-        android:title="@string/string_Summary"
-        android:orderInCategory="100"
-        app:showAsAction="always" />
-    <!--<item android:id="@+id/action_MyTrips" android:title="@string/string_MyTrips"
-        android:orderInCategory="100" app:showAsAction="always" /> -->
-    <item android:id="@+id/action_Standings"
-        android:title="@string/string_Standings"
-        android:orderInCategory="100"
-        app:showAsAction="always" />
-    <item android:id="@+id/action_MyTripsMaps"
-        android:title="@string/string_MyTripsMap"
-        android:orderInCategory="100"
-        app:showAsAction="always" />
+    <item android:id="@+id/action_Record" android:title="@string/string_Record"
+        android:orderInCategory="100" app:showAsAction="always" />
+    <item android:id="@+id/action_Summary" android:title="@string/string_Summary"
+        android:orderInCategory="100" app:showAsAction="always" />
+    <item android:id="@+id/action_MyTrips" android:title="@string/string_MyTrips"
+        android:orderInCategory="100" app:showAsAction="always" />
+    <item android:id="@+id/action_Standings" android:title="@string/string_Standings"
+        android:orderInCategory="100" app:showAsAction="always" />
+
 </menu>

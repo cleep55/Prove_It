@@ -19,14 +19,14 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="800dp"
+            android:layout_height="400dp"
             android:layout_weight="1"
             android:orientation="vertical">
             <ProgressBar
                 android:id="@+id/pb_accel"
                 style="@android:style/Widget.ProgressBar.Horizontal"
                 android:layout_width="100dp"
-                android:layout_height="40dp"
+                android:layout_height="wrap_content"
                 android:layout_marginRight="5dp" />
             <TextView
                 android:id="@+id/pbAccelTV"
@@ -37,7 +37,7 @@
                 android:id="@+id/pb_brake"
                 style="@android:style/Widget.ProgressBar.Horizontal"
                 android:layout_width="100dp"
-                android:layout_height="40dp"
+                android:layout_height="wrap_content"
                 android:layout_marginRight="5dp" />
             <TextView
                 android:id="@+id/pbBrakeTV"
@@ -48,7 +48,7 @@
                 android:id="@+id/pb_corner"
                 style="@android:style/Widget.ProgressBar.Horizontal"
                 android:layout_width="100dp"
-                android:layout_height="40dp"
+                android:layout_height="wrap_content"
                 android:layout_marginRight="5dp" />
             <TextView
                 android:id="@+id/pbCornerTV"
@@ -58,13 +58,12 @@
         </LinearLayout>
         <AbsoluteLayout
             android:layout_width="match_parent"
-            android:layout_height="120dp"
+            android:layout_height="400dp"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_gravity="center">
+            android:orientation="vertical">
             <TextView
                 android:id="@+id/OverallScore"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Overall Score\n92"
                 android:textSize="35px"
@@ -73,7 +72,7 @@
         </AbsoluteLayout>
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="800dp"
+            android:layout_height="400dp"
             android:orientation="vertical"
             android:layout_weight="1"
             android:layout_marginLeft="5dp" >
@@ -81,7 +80,7 @@
                 android:id="@+id/pb_LKA"
                 style="@android:style/Widget.ProgressBar.Horizontal"
                 android:layout_width="100dp"
-                android:layout_height="40dp" />
+                android:layout_height="wrap_content" />
             <TextView
                 android:id="@+id/pbLKATV"
                 android:layout_width="match_parent"
@@ -91,22 +90,22 @@
                 android:id="@+id/pb_dist_from_objects"
                 style="@android:style/Widget.ProgressBar.Horizontal"
                 android:layout_width="100dp"
-                android:layout_height="40dp" />
+                android:layout_height="wrap_content" />
             <TextView
                 android:id="@+id/pbObjTV"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Object Avoidance" />
             <ProgressBar
-                android:id="@+id/pb_fuel_efficiency"
+                android:id="@+id/pb_blind_spot"
                 style="@android:style/Widget.ProgressBar.Horizontal"
                 android:layout_width="100dp"
-                android:layout_height="40dp" />
+                android:layout_height="wrap_content" />
             <TextView
-                android:id="@+id/pbFuelTV"
+                android:id="@+id/pbBLISTV"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Fuel Efficiency" />
+                android:text="Blind Spot Avoidance" />
         </LinearLayout>
 
     </LinearLayout>
@@ -116,10 +115,13 @@
         android:orientation="vertical"
         android:layout_weight="1">
 
-        <com.github.mikephil.charting.charts.LineChart
+        <TextView
             android:id="@+id/chart"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="wrap_content"
+            android:textSize="30dp"
+            android:gravity="center"
+            android:text="Chart"/>
 
 
 

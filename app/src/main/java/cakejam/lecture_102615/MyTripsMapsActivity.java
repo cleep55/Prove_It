@@ -1,154 +1,159 @@
 package cakejam.lecture_102615;
-/* -----------------------------------------------------------------------------------------
- * ---------------------------- BELOW provided with map template ---------------------------
- * -----------------------------------------------------------------------------------------*/
+
+import android.Manifest;
 import android.app.ActionBar;
-import android.app.Activity;
-import android.app.Fragment;
+import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.ActionBarActivity;
+import android.os.Bundle;
+
+//import com.google.android.gms.maps.*;
+//import com.google.android.gms.maps.model.*;
+//import android.app.Activity;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.Html;
-import android.view.Menu;
+//import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.GridLayout;
-import android.widget.TextView;
 
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
 
-/* -----------------------------------------------------------------------------------------
- * ---------------------------- ABOVE provided with map template ---------------------------
- * -----------------------------------------------------------------------------------------*/
-
-
-public class MyTripsMapsActivity extends AppCompatActivity/*FragmentActivity*/ implements OnMapReadyCallback {
+public class MyTripsMapsActivity extends FragmentActivity implements OnMapReadyCallback{
 
     private GoogleMap mMap;
-    RecordActivity recordActivity = new RecordActivity();
-    GridLayout trip1Button, trip2Button, trip3Button, trip4Button, trip5Button;
+    Toolbar toolbar;
+    private ArrayList<LatLng> points;
 
+    LocationManager locationManager;
+    String PROVIDER = LocationManager.GPS_PROVIDER;
+    Location location;
+    CamLocationListener camLL;
+    double lat, lng;
 
-    ArrayList<Trip> trips = recordActivity.trips;
+    private static final LatLng LOWER_MANHATTAN = new LatLng(40.722543,
+            -73.998585);
+    private static final LatLng TIMES_SQUARE = new LatLng(40.7577, -73.9857);
+    private static final LatLng BROOKLYN_BRIDGE = new LatLng(40.7057, -73.9964);
 
-    @Override
+    private GoogleMap googleMap;
+
     protected void onCreate(Bundle savedInstanceState) {
-        /* -----------------------------------------------------------------------------------------
-         * ---------------------------- BELOW provided with map template ---------------------------
-         * -----------------------------------------------------------------------------------------*/
         super.onCreate(savedInstanceState);
+        //if(!isGooglePlayServicesAvailable()) finish();
         setContentView(R.layout.activity_my_trips_maps);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowCustomEnabled(true);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        lat = 40.722543;
+        lng = -73.998585;
+
+        CircleOptions circleOptions = new CircleOptions()
+                .center(new LatLng(lat,lng))
+                .radius(5)
+                .fillColor(Color.BLUE)
+                .strokeWidth(1)
+                .strokeColor(50);
+//        lng = location.getLongitude();
+//        lat = location.getLatitude();
+        LatLng position = new LatLng(lat,lng);
+        camLL = new CamLocationListener(lat,lng);
+        mMap.addCircle(circleOptions);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 16));
+        Log.v("MTM_activity lat: ", Double.toString(lat));
+        Log.v("MTM_activity long: ", Double.toString(lng));
+        //setSupportActionBar(toolbar);
+
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_CONTACTS)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                // Show an expanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+
+            } else {
+
+                // No explanation needed, we can request the permission.
+
+               // ActivityCompat.requestPermissions(this,
+               //         new String[]{Manifest.permission.READ_CONTACTS},
+               //         MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+        }
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        location = locationManager.getLastKnownLocation(PROVIDER);
+
+        points = new ArrayList<>();
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        //MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        /* -----------------------------------------------------------------------------------------
-         * ---------------------------- ABOVE provided with map template ---------------------------
-         * -----------------------------------------------------------------------------------------*/
-
-        TextView date1 = (TextView) findViewById(R.id.b1_date);
-        TextView date2 = (TextView) findViewById(R.id.b2_date);
-        TextView date3 = (TextView) findViewById(R.id.b3_date);
-        TextView date4 = (TextView) findViewById(R.id.b4_date);
-        TextView date5 = (TextView) findViewById(R.id.b5_date);
-
-        TextView overall1 = (TextView) findViewById(R.id.b1_overall);
-        TextView overall2 = (TextView) findViewById(R.id.b2_overall);
-        TextView overall3 = (TextView) findViewById(R.id.b3_overall);
-        TextView overall4 = (TextView) findViewById(R.id.b4_overall);
-        TextView overall5 = (TextView) findViewById(R.id.b5_overall);
-
-        TextView triptime1 = (TextView) findViewById(R.id.b1_triptime);
-        TextView triptime2 = (TextView) findViewById(R.id.b2_triptime);
-        TextView triptime3 = (TextView) findViewById(R.id.b3_triptime);
-        TextView triptime4 = (TextView) findViewById(R.id.b4_triptime);
-        TextView triptime5 = (TextView) findViewById(R.id.b5_triptime);
-
-        TextView speed1 = (TextView) findViewById(R.id.b1_speed);
-        TextView speed2 = (TextView) findViewById(R.id.b2_speed);
-        TextView speed3 = (TextView) findViewById(R.id.b3_speed);
-        TextView speed4 = (TextView) findViewById(R.id.b4_speed);
-        TextView speed5 = (TextView) findViewById(R.id.b5_speed);
-
-        TextView brake1 = (TextView) findViewById(R.id.b1_brake);
-        TextView brake2 = (TextView) findViewById(R.id.b2_brake);
-        TextView brake3 = (TextView) findViewById(R.id.b3_brake);
-        TextView brake4 = (TextView) findViewById(R.id.b4_brake);
-        TextView brake5 = (TextView) findViewById(R.id.b5_brake);
-
-        TextView corner1 = (TextView) findViewById(R.id.b1_corner);
-        TextView corner2 = (TextView) findViewById(R.id.b2_corner);
-        TextView corner3 = (TextView) findViewById(R.id.b3_corner);
-        TextView corner4 = (TextView) findViewById(R.id.b4_corner);
-        TextView corner5 = (TextView) findViewById(R.id.b5_corner);
-
-        trip1Button = (GridLayout) findViewById(R.id.trip1);
-        trip2Button = (GridLayout) findViewById(R.id.trip2);
-        trip3Button = (GridLayout) findViewById(R.id.trip3);
-        trip4Button = (GridLayout) findViewById(R.id.trip4);
-        trip5Button = (GridLayout) findViewById(R.id.trip5);
-
-        if(RecordActivity.trips.size()>=1 && !RecordActivity.trips.get(trips.size()-1).getStartTime().equals(null)){
-            date1.setText(RecordActivity.trips.get(trips.size()-1).getStartTime());
-            overall1.setText("Overall: "+String.format("%.2f", RecordActivity.trips.get(trips.size() - 1).getTripTotalScore()));
-            triptime1.setText(RecordActivity.trips.get(trips.size()-1).getTripDuration());
-            speed1.setText("Speed: "+String.format("%.2f", RecordActivity.trips.get(trips.size() - 1).getSpeedScore()));
-            brake1.setText("Brake: "+String.format("%.2f", RecordActivity.trips.get(trips.size()-1).getBrakeScore()));
-            corner1.setText("Corner: " + String.format("%.2f", RecordActivity.trips.get(trips.size() - 1).getCornerScore()));
-        }
-
-        if(RecordActivity.trips.size()>=2 && !RecordActivity.trips.get(trips.size() - 2).getStartTime().equals(null)) {
-            date2.setText(RecordActivity.trips.get(trips.size()-2).getStartTime());
-            overall2.setText("Overall: "+String.format("%.2f", RecordActivity.trips.get(trips.size() - 2).getTripTotalScore()));
-            triptime2.setText(RecordActivity.trips.get(trips.size()-1).getTripDuration());
-            speed2.setText("Speed: "+String.format("%.2f", RecordActivity.trips.get(trips.size() - 2).getSpeedScore()));
-            brake2.setText("Brake: "+String.format("%.2f", RecordActivity.trips.get(trips.size()-2).getBrakeScore()));
-            corner2.setText("Corner: "+String.format("%.2f",RecordActivity.trips.get(trips.size()-2).getCornerScore()));
-        }
-
-        if(RecordActivity.trips.size()>=3 && !RecordActivity.trips.get(trips.size()-3).getStartTime().equals(null)){
-            date3.setText(RecordActivity.trips.get(trips.size() - 3).getStartTime());
-            overall3.setText("Overall: "+String.format("%.2f", RecordActivity.trips.get(trips.size() - 3).getTripTotalScore()));
-            triptime3.setText(RecordActivity.trips.get(trips.size()-3).getTripDuration());
-            speed3.setText("Speed: "+String.format("%.2f", RecordActivity.trips.get(trips.size() - 3).getSpeedScore()));
-            brake3.setText("Brake: "+String.format("%.2f", RecordActivity.trips.get(trips.size()-3).getBrakeScore()));
-            corner3.setText("Corner: "+String.format("%.2f",RecordActivity.trips.get(trips.size()-3).getCornerScore()));
-        }
-
-        if(RecordActivity.trips.size()>=4 && !RecordActivity.trips.get(trips.size()-4).getStartTime().equals(null)){
-            date4.setText(RecordActivity.trips.get(trips.size()-4).getStartTime());
-            overall4.setText("Overall: "+String.format("%.2f", RecordActivity.trips.get(trips.size() - 4).getTripTotalScore()));
-            triptime4.setText(RecordActivity.trips.get(trips.size()-4).getTripDuration());
-            speed4.setText("Speed: "+String.format("%.2f", RecordActivity.trips.get(trips.size() - 4).getSpeedScore()));
-            brake4.setText("Brake: "+String.format("%.2f", RecordActivity.trips.get(trips.size()-4).getBrakeScore()));
-            corner4.setText("Corner: "+String.format("%.2f",RecordActivity.trips.get(trips.size()-4).getCornerScore()));
-        }
-
-        if (RecordActivity.trips.size()>=5 && !RecordActivity.trips.get(trips.size()-5).getStartTime().equals(null)) {
-            date5.setText(RecordActivity.trips.get(trips.size()-5).getStartTime());
-            overall5.setText("Overall: "+String.format("%.2f", RecordActivity.trips.get(trips.size() - 5).getTripTotalScore()));
-            triptime5.setText(RecordActivity.trips.get(trips.size()-5).getTripDuration());
-            speed5.setText("Speed: " + String.format("%.2f", RecordActivity.trips.get(trips.size() - 5).getSpeedScore()));
-            brake5.setText("Brake: "+String.format("%.2f", RecordActivity.trips.get(trips.size()-5).getBrakeScore()));
-            corner5.setText("Corner: "+String.format("%.2f",RecordActivity.trips.get(trips.size()-5).getCornerScore()));
-        }
-
     }
+
+    @Override
+    protected void onPause(){
+        super.onPause();
+        String permission = "android.permission.ACCESS_FINE_LOCATION";
+        checkCallingOrSelfPermission(permission);
+        locationManager.removeUpdates(camLL);
+    }
+
+    protected void onResume(){
+        super.onResume();
+        String permission = "android.permission.ACCESS_FINE_LOCATION";
+        checkCallingOrSelfPermission(permission);
+        locationManager.requestLocationUpdates(PROVIDER,0, 0, camLL);
+    }
+    private void setUpMapIfNeeded() {
+        // check if we have got the googleMap already
+        if (googleMap == null) {
+            googleMap = ((SupportMapFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.map)).getMap();
+            if (googleMap != null) {
+                addLines();
+            }
+        }
+    }
+    private void addLines() {
+
+        googleMap
+                .addPolyline((new PolylineOptions())
+                        .add(TIMES_SQUARE, BROOKLYN_BRIDGE, LOWER_MANHATTAN,
+                                TIMES_SQUARE).width(5).color(Color.BLUE)
+                        .geodesic(true));
+        // move camera to zoom on map
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LOWER_MANHATTAN,
+                13));
+    }
+
 
 
 
@@ -164,105 +169,13 @@ public class MyTripsMapsActivity extends AppCompatActivity/*FragmentActivity*/ i
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        /* -----------------------------------------------------------------------------------------
-         * ---------------------------- BELOW provided with map template ---------------------------
-         * -----------------------------------------------------------------------------------------*/
         mMap = googleMap;
-        if(mMap!=null) {
-            mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-            mMap.setMyLocationEnabled(true);
-            mMap.animateCamera(CameraUpdateFactory.zoomBy(5));
-        }
 
-//        /* -----------------------------------------------------------------------------------------
-//         * ---------------------------- ABOVE provided with map template ---------------------------
-//         * -----------------------------------------------------------------------------------------*/
-
-
-        // SETTING MAP TYPES
-        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-    }
-
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    public void buttonHandler(View v) {
-//        Intent myIntent = new Intent(this, SummaryActivity.class);
-//
-//
-//        Bundle myBundle = new Bundle();
-//        myBundle.putInt("x",5);
-//        myBundle.putString("str","hello");
-//        myIntent.putExtras(myBundle);
-//
-//        startActivity(myIntent);
-        if(v.getId() == trip1Button.getId() && RecordActivity.trips.size()>=1){
-            mMap.clear();
-            populateTripOnMap(trips.get(trips.size() - 1), mMap);
-        }
-        else if(v.getId() == trip2Button.getId() && RecordActivity.trips.size()>=2){
-            mMap.clear();
-            populateTripOnMap(trips.get(trips.size()-2), mMap);
-        }
-        else if(v.getId() == trip3Button.getId() && RecordActivity.trips.size()>=3){
-            mMap.clear();
-            populateTripOnMap(trips.get(trips.size()-3), mMap);
-        }
-        else if(v.getId() == trip4Button.getId() && RecordActivity.trips.size()>=4){
-            mMap.clear();
-            populateTripOnMap(trips.get(trips.size()-4), mMap);
-        }
-        else if(v.getId() == trip5Button.getId()&&RecordActivity.trips.size()>=5){
-                mMap.clear();
-                populateTripOnMap(trips.get(trips.size() - 5), mMap);
-
-
-        }
-    }
-
-    public void populateTripOnMap(Trip trip, GoogleMap map){
-        map.clear();
-        for(int i=0;i<trip.getLatPoints().size();i++){
-            LatLng currMarker = new LatLng(trip.getLatPoints().get(i),trip.getLongPoints().get(i));
-            //map.addMarker(new MarkerOptions().position(currMarker));
-            if(trip.getDeductionType().get(i)== recordActivity.speedDeduction)
-            {
-                //create a speed deduction marker
-                map.addMarker(new MarkerOptions()
-                        .title(trip.getDeductionType().get(i)+"\n"+trip.getTimePoints().get(i))
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                        .position(currMarker)).showInfoWindow();
-            }
-            else if(trip.getDeductionType().get(i)== recordActivity.brakeDeduction)
-            {
-                //create a brake deduction marker
-                map.addMarker(new MarkerOptions()
-                        .title(trip.getDeductionType().get(i))
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
-                        .position(currMarker)).showInfoWindow();
-            }
-            else if(trip.getDeductionType().get(i)== recordActivity.cornerDeduction)
-            {
-                //create a corner deduction marker
-                map.addMarker(new MarkerOptions()
-                        .title(trip.getDeductionType().get(i))
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN))
-                        .position(currMarker)).showInfoWindow();
-            }
-            else{
-                map.addMarker(new MarkerOptions()
-                        .title(trip.getDeductionType().get(i))
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))
-                        .position(currMarker)).showInfoWindow();
-            }
-
-            map.moveCamera(CameraUpdateFactory.newLatLng(currMarker));
-            map.animateCamera(CameraUpdateFactory.zoomBy(10));
-        }
-
+        // Add a marker in Sydney and move the camera
+        LatLng sydney = new LatLng(-34, 151);
+        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        setUpMapIfNeeded();
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -281,28 +194,23 @@ public class MyTripsMapsActivity extends AppCompatActivity/*FragmentActivity*/ i
                 startActivity(summaryIntent);
                 return true;
 
-            /*case R.id.action_MyTrips:
+            case R.id.action_MyTrips:
                 // User chose the "Favorite" action, mark the current item
                 // as a favorite...
                 Intent myTripsIntent = new Intent(this, MyTripsActivity.class);
                 startActivity(myTripsIntent);
-                return true;*/
+                return true;
             case R.id.action_Standings:
                 // User chose the "Favorite" action, mark the current item
                 // as a favorite...
                 Intent standingsIntent = new Intent(this, StandingsActivity.class);
 
-//                Bundle myBundle = new Bundle();
-//                myBundle.putInt("x",5);
-//                myBundle.putString("str", "hello");
-//                standingsIntent.putExtras(myBundle);
+                Bundle myBundle = new Bundle();
+                myBundle.putInt("x",5);
+                myBundle.putString("str", "hello");
+                standingsIntent.putExtras(myBundle);
 
                 startActivity(standingsIntent);
-                return true;
-            case R.id.action_MyTripsMaps:
-                // User chose the "Settings" item, show the app settings UI...
-                Intent myTripsMapIntent = new Intent(this, MyTripsMapsActivity.class);
-                startActivity(myTripsMapIntent);
                 return true;
 
             default:
