@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:showIn="@layout/activity_second" tools:context="cakejam.lecture_102615.SummaryActivity">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="800dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <ProgressBar
+                android:id="@+id/pb_accel"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="100dp"
+                android:layout_height="40dp"
+                android:layout_marginRight="5dp" />
+            <TextView
+                android:id="@+id/pbAccelTV"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Acceleration" />
+            <ProgressBar
+                android:id="@+id/pb_brake"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="100dp"
+                android:layout_height="40dp"
+                android:layout_marginRight="5dp" />
+            <TextView
+                android:id="@+id/pbBrakeTV"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Brake" />
+            <ProgressBar
+                android:id="@+id/pb_corner"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="100dp"
+                android:layout_height="40dp"
+                android:layout_marginRight="5dp" />
+            <TextView
+                android:id="@+id/pbCornerTV"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Corner" />
+        </LinearLayout>
+        <AbsoluteLayout
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_gravity="center">
+            <TextView
+                android:id="@+id/OverallScore"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Overall Score\n92"
+                android:textSize="35px"
+                android:gravity="center"
+                android:background="@drawable/overall_score"/>
+        </AbsoluteLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="800dp"
+            android:orientation="vertical"
+            android:layout_weight="1"
+            android:layout_marginLeft="5dp" >
+            <ProgressBar
+                android:id="@+id/pb_LKA"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="100dp"
+                android:layout_height="40dp" />
+            <TextView
+                android:id="@+id/pbLKATV"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Lane Centering" />
+            <ProgressBar
+                android:id="@+id/pb_dist_from_objects"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="100dp"
+                android:layout_height="40dp" />
+            <TextView
+                android:id="@+id/pbObjTV"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Object Avoidance" />
+            <ProgressBar
+                android:id="@+id/pb_fuel_efficiency"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="100dp"
+                android:layout_height="40dp" />
+            <TextView
+                android:id="@+id/pbFuelTV"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Fuel Efficiency" />
+        </LinearLayout>
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_weight="1">
+
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/chart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:layout_weight="1">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_weight="1">
+            <ImageView
+                android:background="@drawable/green_star_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Badge 1"
+                android:textAlignment="center"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true"
+                android:textColor="#FFFFFF"/>
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_weight="1">
+            <ImageView
+                android:background="@drawable/green_star_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Badge 2"
+                android:textAlignment="center"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_weight="1">
+            <ImageView
+                android:background="@drawable/red_up_arrow"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Badge 3"
+                android:textAlignment="center"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true" />
+        </RelativeLayout>
+
+    </LinearLayout>
+
+
+
+</LinearLayout>
